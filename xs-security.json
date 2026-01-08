@@ -1,5 +1,7 @@
 {
   "scopes": [],
   "attributes": [],
-  "role-templates": []
+  "role-templates": [],
+  "authorities-inheritance": false,
+  "grant-types": ["authorization_code","client_credentials"]
 }
