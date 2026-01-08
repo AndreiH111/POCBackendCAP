@@ -1,40 +1,60 @@
 _schema-version: 3.3.0
 ID: CardsCAPBackend
+description: A simple CAP project.
 version: 1.0.0
-description: "A simple CAP project."
-parameters:
-  enable-parallel-deployments: true
-build-parameters:
-  before-all:
-    - builder: custom
-      commands:
-        - npm ci
-        - npx cds build --production
 modules:
   - name: CardsCAPBackend-srv
     type: nodejs
     path: gen/srv
-    parameters:
-      instances: 1
-      buildpack: nodejs_buildpack
-    build-parameters:
-      builder: npm-ci
-    provides:
-      - name: srv-api # required by consumers of CAP services (e.g. approuter)
-        properties:
-          srv-url: ${default-url}
     requires:
       - name: CardsCAPBackend-db
       - name: CardsCAPBackend-auth
-
+    provides:
+      - name: srv-api
+        properties:
+          srv-url: ${default-url}
+    parameters:
+      buildpack: nodejs_buildpack
+      instances: 1
+    build-parameters:
+      builder: npm-ci
   - name: CardsCAPBackend-db-deployer
     type: hdb
     path: gen/db
-    parameters:
-      buildpack: nodejs_buildpack
     requires:
       - name: CardsCAPBackend-db
-
+    parameters:
+      buildpack: nodejs_buildpack
+  - name: CardsCAPBackend-destination-content
+    type: com.sap.application.content
+    requires:
+      - name: CardsCAPBackend-destination-service
+        parameters:
+          content-target: true
+      - name: CardsCAPBackend_html_repo_host
+        parameters:
+          service-key:
+            name: CardsCAPBackend_html_repo_host-key
+      - name: CardsCAPBackend-auth
+        parameters:
+          service-key:
+            name: CardsCAPBackend-auth-key
+    parameters:
+      content:
+        instance:
+          destinations:
+            - Name: CARDSCAPBACKEND_CardsCAPBackend_html_repo_host
+              ServiceInstanceName: CardsCAPBackend-html5-app-host-service
+              ServiceKeyName: CardsCAPBackend_html_repo_host-key
+              sap.cloud.service: CARDSCAPBACKEND
+            - Authentication: OAuth2UserTokenExchange
+              Name: CARDSCAPBACKEND_CardsCAPBackend_auth
+              ServiceInstanceName: CardsCAPBackend-auth
+              ServiceKeyName: CardsCAPBackend-auth-key
+              sap.cloud.service: CARDSCAPBACKEND
+          existing_destinations_policy: ignore
+    build-parameters:
+      no-source: true
 resources:
   - name: CardsCAPBackend-db
     type: com.sap.xs.hdi-container
@@ -44,13 +64,36 @@ resources:
   - name: CardsCAPBackend-auth
     type: org.cloudfoundry.managed-service
     parameters:
-      service: xsuaa
-      service-plan: application
-      path: ./xs-security.json
       config:
-        xsappname: CardsCAPBackend-${org}-${space}
-        tenant-mode: dedicated
         oauth2-configuration:
           credential-types:
-            - "binding-secret"
-            - "x509"
+            - binding-secret
+            - x509
+        tenant-mode: dedicated
+        xsappname: CardsCAPBackend-${org}-${space}
+      path: ./xs-security.json
+      service: xsuaa
+      service-plan: application
+  - name: CardsCAPBackend-destination-service
+    type: org.cloudfoundry.managed-service
+    parameters:
+      config:
+        HTML5Runtime_enabled: true
+        version: 1.0.0
+      service: destination
+      service-name: CardsCAPBackend-destination-service
+      service-plan: lite
+  - name: CardsCAPBackend_html_repo_host
+    type: org.cloudfoundry.managed-service
+    parameters:
+      service: html5-apps-repo
+      service-name: CardsCAPBackend-html5-app-host-service
+      service-plan: app-host
+parameters:
+  enable-parallel-deployments: true
+build-parameters:
+  before-all:
+    - builder: custom
+      commands:
+        - npm ci
+        - npx cds build --production

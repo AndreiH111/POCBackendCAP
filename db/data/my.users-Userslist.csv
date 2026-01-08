@@ -1,0 +1,6 @@
+id,name,email,role,active
+1,Meguiso Keith,keith.meguiso@takeda.com,Admin,true
+2,Mejia Ma. Angela,ma-angela.mejia@takeda.com,User,false
+3,Baranco, Lee Ann,lee-ann.baranco@takeda.com,Editor,true
+4,Infante Rowen,rowen.infante@takeda.com;Editor,true
+5,Rilan Michael Angelo,michael-angelo.rilan@takeda.com,Editor,true
