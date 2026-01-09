@@ -12,6 +12,7 @@ target/
 # Web IDE, App Studio
 .che/
 .gen/
+.env
 
 # MTA
 *_mta_build_tmp
@@ -32,3 +33,6 @@ mta_archives/
 
 # @cap-js/cds-typer
 @cds-models
+
+# auto generated wildcard
+gen/db/.env
